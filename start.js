@@ -1,7 +1,7 @@
 //Importando recursos:
 const qrcode = require('qrcode-terminal');
 const { Client } = require('whatsapp-web.js');
-const client = new Client();
+const client = new Client({ puppeteer: { product: "chrome", executablePath: "/usr/bin/chromium-browser" } });
 
 const axios = require('axios');
 const jsdom = require("jsdom");

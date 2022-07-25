@@ -3,7 +3,14 @@ const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const client = new Client({ 
     
-    puppeteer: { product: "chrome", executablePath: "/usr/bin/chromium-browser" }, 
+    puppeteer: { 
+        product: "chrome", 
+        executablePath: "/usr/bin/chromium-browser"
+        headless: true,
+        args: ['--no-sandbox']
+    },
+    
+    
     authStrategy: new LocalAuth()   //
 });
 

@@ -2,17 +2,42 @@
 const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const client = new Client({ 
-    
+    authStrategy: new LocalAuth(),
     puppeteer: { 
         product: "chrome", 
-        executablePath: "/usr/bin/chromium-browser"
+        executablePath: "/usr/bin/chromium-browser",
         headless: true,
-        args: ['--no-sandbox']
+        handleSIGINT: false,
+      args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox'
     },
     
     
-    authStrategy: new LocalAuth()   //
+       
 });
+
+
+
+
+const client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+      handleSIGINT: false,
+      args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox'
+      ] }
+  });
+
+
+
+
+
+
+
+
+
 
 const axios = require('axios');
 const jsdom = require("jsdom");
@@ -260,6 +285,11 @@ client.on('message', async msg => {
 
 
     
+process.on("SIGINT", async () => {
+    console.log("(SIGINT) Shutting down...");
+    await client.destroy();
+    process.exit(0);
+    })
 
     
 

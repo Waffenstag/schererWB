@@ -20,15 +20,7 @@ const client = new Client({
 
 
 
-const client = new Client({
-    authStrategy: new LocalAuth(),
-    puppeteer: {
-      handleSIGINT: false,
-      args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox']
-    }
-  });
+
 
 
 

@@ -10,7 +10,7 @@ const client = new Client({
         handleSIGINT: false,
       args: [
           '--no-sandbox',
-          '--disable-setuid-sandbox'
+          '--disable-setuid-sandbox']
     },
     
     
@@ -26,8 +26,8 @@ const client = new Client({
       handleSIGINT: false,
       args: [
           '--no-sandbox',
-          '--disable-setuid-sandbox'
-      ] }
+          '--disable-setuid-sandbox']
+    }
   });
 
 

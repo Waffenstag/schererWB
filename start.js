@@ -62,8 +62,8 @@ dbl.serialize(() => {
     dbl.run('CREATE TABLE IF NOT EXISTS list (id INTEGER PRIMARY KEY, codScherer INTEGER, codIndustria TEXT, usuario TEXT, data TEXT)')
 })
 //Função para salvar valores nas colunas:
-async function saveDBL(xl, yl, zl, wl){
-    return dbl.run('INSERT INTO list (codScherer, codIndustria, usuario, data) VALUES (?, ?, ?, ?)',[xl, yl, zl, wl]);
+async function saveDBL(xl, yl, zl){
+    return dbl.run('INSERT INTO list (codScherer, codIndustria, usuario) VALUES (?, ?, ?)',[xl, yl, zl]);
 }
 
 
@@ -179,7 +179,7 @@ client.on('message', async msg => {
                                     var strinf = stringify(datahorario);
                                     console.log(strinf)
 
-                                    saveDBL(codSch, codigopr, vendedor, datahorario);
+                                    saveDBL(codSch, codigopr, vendedor);
 
                                     //Busca todas as linhas na tabela list, formata o conteúdo e envia para si mesmo (msg.to):
                                     dbl.all("SELECT * FROM list", function(err, rows) {

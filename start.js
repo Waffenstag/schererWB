@@ -211,7 +211,7 @@ client.on('message', async msg => {
                                         texto12 = texto11.replaceAll("data:","");
                                         console.log(texto12)
 
-                                        client.sendMessage(eu, texto12); 
+                                        await client.sendMessage(eu, texto12); 
                                         console.log("end.")
                                     });
                                 } 

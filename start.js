@@ -7,9 +7,9 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const client = new Client({ 
     authStrategy: new LocalAuth(),
     puppeteer: { 
-        //product: "chrome", 
-        //executablePath: "/usr/bin/chromium-browser",
-        //headless: true,
+        product: "chrome", 
+        executablePath: "/usr/bin/chromium-browser",
+        headless: true,
         handleSIGINT: false,
       args: [
           '--no-sandbox',

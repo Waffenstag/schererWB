@@ -154,7 +154,7 @@ client.on('message', async msg => {
     else if (msg.body.startsWith('!sudonome ')) {
         console.log(msg.from, " ", msg.body, " ", timeConverter2(msg.timestamp), " ", msg.deviceType)
 
-        let nome = msg.body.replace("!nome ","");
+        let nome = msg.body.replace("!sudonome ","");
         let numero = msg.from.replace("@c.us","");
         let msgApresentaçao = "Bem vindo " + nome + ", para requisitar uma peça envie o código Scherer referente com o comando *#* seguido do código.\n\n   (exemplo: *#19117*)";
                 
@@ -478,7 +478,7 @@ client.on('message', async msg => {
                     var texto = JSON.stringify(rows);
                     msglista = SetReplace(texto);
                     console.log(msglista)
-                    client.sendMessage(msg.to, msglista); 
+                    client.sendMessage(Numerotelefonista, msglista); 
                     console.log("Lista enviada ao telefonista.")
                 });
 

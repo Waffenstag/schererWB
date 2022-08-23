@@ -293,7 +293,60 @@ client.on('message', async msg => {
             console.log("Requisição não é válida");
         }
     }
+////////////////////////////////////////inf//////////////////////////////////////
+   else if (msg.body.startsWith('i#')) {
+    let codSch = msg.body.split('i#')[1]; 
 
+    if (isNaN(codSch) === false) {
+
+        let URL = 'https://www.scherer-sa.com.br/promocoes?parametro=cod_scherer&busca=' + codSch;        
+        let numero = msg.from.replace("@c.us","");
+        let datas = timeConverter(msg.timestamp);
+        let horario = timeConverter2(msg.timestamp);
+        console.log("1/8 Requisição:" + msg.from, " ", msg.body, " ", datas + horario, " ", msg.deviceType)
+
+        return db.get('SELECT * FROM users WHERE number = ?', [numero], async function(err, row) {
+            console.log("2/8 Objeto row identificado = " + row)
+            
+
+            if (row == undefined) {
+                client.sendMessage(msg.from, "Este número ainda não está registrado, envie o comando *!cadastrar* para se vincular um nome a esse contato.");
+            } 
+            else { 
+                try {
+                    console.log("3/8 Definindo URL")
+                    const { data } = await axios.get(URL);
+                    const dom = new JSDOM(data);
+                    const { document } = dom.window
+                    
+                    console.log("4/8 Buscando elementos no arquivo DOM")
+                    const codigop = document.querySelector("div > div > div > a > p").lastChild.textContent;
+                    const codigopr = codigop.replace("\t\t\t\t\t\t\t\t\t\t", "");
+                    const descricao = document.querySelector("#promocoes > div > div > div > a > h4").textContent;
+
+                    var vendedor = row.name;
+                    var msgaddlist = "Scherer " + codSch + ":\n\n" + "   *(" + codigopr +  " )* \n\n" + descricao;
+                    client.sendMessage(msg.from, msgaddlist);
+                    console.log("5/8 Scherer: " + codSch)
+
+                  
+                    
+                } 
+                catch (err) {            
+                    client.sendMessage(msg.from, "Nenhum produto encontrado!");
+                    console.error(err)
+                    console.log("-Nenhum produto encontrado!") 
+                }
+            }
+
+        });
+    } 
+    else { 
+        console.log("Requisição não é válida");
+    }
+} 
+    
+    
 //////////////////////////////////////// FOTO ////////////////////////////////////
     else if (msg.body.startsWith('f#')) {
         let codSch = msg.body.split('f#')[1]; 
@@ -334,7 +387,7 @@ client.on('message', async msg => {
                         var datasdb = stringify(datas);
                         var horariodb = stringify(horario);
                         
-                        saveDBL(codSch, "FOTO " + codigopr, vendedor, datas, horario);
+                        saveDBL(codSch, "*FOTO* " + codigopr, vendedor, datas, horario);
                         console.log("7/8 Propriedades salvas em list.db com sucesso")
                         let datasx = timeConverter(msg.timestamp);
                         //Busca linhas na tabela list, formata o conteúdo e envia para si mesmo (msg.to):

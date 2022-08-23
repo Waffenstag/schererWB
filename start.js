@@ -7,12 +7,12 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const client = new Client({ 
     authStrategy: new LocalAuth(),
     puppeteer: { 
-        product: "chrome", 
-        executablePath: "/usr/bin/chromium-browser",
-        headless: true,
+    //    product: "chrome", 
+    //    executablePath: "/usr/bin/chromium-browser",
+    //    headless: true,
         handleSIGINT: false,
       args: [
-          '--no-sandbox',
+         '--no-sandbox',
           '--disable-setuid-sandbox']
     },      
 });
@@ -95,7 +95,8 @@ function timeConverter(UNIX_timestamp){
     return lista4;
   }
 
-
+//Sets
+var Numerotelefonista = "554998300696@c.us";
 
 
 //Main:
@@ -113,8 +114,44 @@ client.on('message', async msg => {
         client.sendMessage(msg.from, setmsg);
     }
 
-    //Se msg iniciar com "!nome " (com espaço no final):
+    //Se msg iniciar com "!nome " (com espaço no final):   Restriçoes         
     else if (msg.body.startsWith('!nome ')) {
+        console.log(msg.from, " ", msg.body, " ", timeConverter2(msg.timestamp), " ", msg.deviceType)
+
+        let nome = msg.body.replace("!nome ","");
+        let numero = msg.from.replace("@c.us","");
+        console.log(numero)
+
+        let numeroprefixo = numero.slice(0,8);
+        console.log(numeroprefixo)
+
+        let numeroramal = numero.slice(8,numero.length); 
+        console.log(numeroramal)
+
+        let msgApresentaçao = "Bem vindo " + nome + ", para requisitar uma peça envie o código Scherer referente com o comando *#* seguido do código.\n\n   (exemplo: *#19117*)";
+        
+
+        if (numeroprefixo == "55553313" && numeroramal <= 0393 && numeroramal >= 0350) {
+            return db.get('SELECT number FROM users WHERE number = ?', [numero], function(err, row) {
+                console.log("numero = " + row)
+                if (row == undefined) {
+                    saveDB(numero, nome);
+                    client.sendMessage(msg.from, msgApresentaçao);
+                }
+                else {
+                    client.sendMessage(msg.from, "Neste número já existe um nome vinculado.");
+                }
+    
+            })     
+        } else {
+            client.sendMessage(msg.from, "Número incompatível com o registro de ramais válidos.");
+        }
+                
+    } 
+
+
+    //Se msg iniciar com "!nome " (com espaço no final): super user
+    else if (msg.body.startsWith('!sudonome ')) {
         console.log(msg.from, " ", msg.body, " ", timeConverter2(msg.timestamp), " ", msg.deviceType)
 
         let nome = msg.body.replace("!nome ","");
@@ -134,6 +171,14 @@ client.on('message', async msg => {
         })     
                 
     } 
+
+
+
+
+
+
+
+
 
     //else para apagar registro de contato
     else if (msg.body === '!apagarnome') {
@@ -231,8 +276,7 @@ client.on('message', async msg => {
                             var texto = JSON.stringify(rows);
                             msglista = SetReplace(texto);
                             console.log(msglista)
-                            var randomNum = "555555555555@c.us";
-                            client.sendMessage(randomNum, msglista); 
+                            client.sendMessage(Numerotelefonista, msglista);
                             console.log("8/8 Lista enviada ao telefonista.")
                         });
                     } 
@@ -249,6 +293,88 @@ client.on('message', async msg => {
             console.log("Requisição não é válida");
         }
     }
+
+//////////////////////////////////////// FOTO ////////////////////////////////////
+    else if (msg.body.startsWith('f#')) {
+        let codSch = msg.body.split('f#')[1]; 
+
+        if (isNaN(codSch) === false) {
+
+            let URL = 'https://www.scherer-sa.com.br/promocoes?parametro=cod_scherer&busca=' + codSch;        
+            let numero = msg.from.replace("@c.us","");
+            let datas = timeConverter(msg.timestamp);
+            let horario = timeConverter2(msg.timestamp);
+            console.log("1/8 Requisição:" + msg.from, " ", msg.body, " ", datas + horario, " ", msg.deviceType)
+
+            return db.get('SELECT * FROM users WHERE number = ?', [numero], async function(err, row) {
+                console.log("2/8 Objeto row identificado = " + row)
+                
+    
+                if (row == undefined) {
+                    client.sendMessage(msg.from, "Este número ainda não está registrado, envie o comando *!cadastrar* para se vincular um nome a esse contato.");
+                } 
+                else { 
+                    try {
+                        console.log("3/8 Definindo URL")
+                        const { data } = await axios.get(URL);
+                        const dom = new JSDOM(data);
+                        const { document } = dom.window
+                        
+                        console.log("4/8 Buscando elementos no arquivo DOM")
+                        const codigop = document.querySelector("div > div > div > a > p").lastChild.textContent;
+                        const codigopr = codigop.replace("\t\t\t\t\t\t\t\t\t\t", "");
+                        const descricao = document.querySelector("#promocoes > div > div > div > a > h4").textContent;
+
+                        var vendedor = row.name;
+                        var msgaddlist = "Foto do cod " + codSch + " adicionado a lista de requisição:\n\n" + "   *(" + codigopr +  " )* \n\n" + descricao;
+                        client.sendMessage(msg.from, msgaddlist);
+                        console.log("5/8 Scherer: " + codSch)
+
+                        console.log("6/8 Fazendo converção dos Objetos em string")
+                        var datasdb = stringify(datas);
+                        var horariodb = stringify(horario);
+                        
+                        saveDBL(codSch, "FOTO " + codigopr, vendedor, datas, horario);
+                        console.log("7/8 Propriedades salvas em list.db com sucesso")
+                        let datasx = timeConverter(msg.timestamp);
+                        //Busca linhas na tabela list, formata o conteúdo e envia para si mesmo (msg.to):
+                        dbl.all("SELECT codScherer, codIndustria, usuario FROM list WHERE datas = ?",  [datasx], function(err, rows) {
+                            var texto = JSON.stringify(rows);
+                            msglista = SetReplace(texto);
+                            console.log(msglista)
+                            client.sendMessage(Numerotelefonista, msglista); 
+                            console.log("8/8 Lista enviada ao telefonista.")
+                        });
+                    } 
+                    catch (err) {            
+                        client.sendMessage(msg.from, "Nenhum produto encontrado!");
+                        console.error(err)
+                        console.log("-Nenhum produto encontrado!") 
+                    }
+                }
+
+            });
+        } 
+        else { 
+            console.log("Requisição não é válida");
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     //Se msg iniciar com "!informe " (com espaço no final) para retornar a lista do dia (no formato d/m/ano):
     else if (msg.body.startsWith('!informe ')) {
@@ -311,6 +437,59 @@ client.on('message', async msg => {
 
 
     
+    else if (msg.body.startsWith("!foto ") && msg.hasMedia) {
+        console.log(msg.from, " ", msg.body, " ", timeConverter2(msg.timestamp), " ", msg.deviceType)
+        
+
+        let vendedor = msg.body.replace("!foto ","");
+        console.log(vendedor)
+        return db.get('SELECT * FROM users WHERE name = ?', [vendedor], async function(err, row) {
+            console.log("2/8 Objeto row identificado = " + row)
+            
+
+            if (row == undefined) {
+                client.sendMessage(msg.from, "Este nome não existe.");
+            } 
+            else { 
+                var vendedornumero = row.number;
+                var vendedornumeroto = vendedornumero + "@c.us";
+                let chat = await msg.getChat();
+                const media = await msg.downloadMedia();
+                client.sendMessage(vendedornumeroto, media);
+ 
+                console.log("Arquivo enviado.")
+            }
+        });   
+        
+    } 
+
+
+
+
+    //else para help
+    else if (msg.body === '!help') {
+        console.log(msg.from, " ", msg.body, " ", timeConverter2(msg.timestamp), " ", msg.deviceType)
+        
+        var help = ""
+ 
+            console.log("Arquivo enviado.")
+        
+    } 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
